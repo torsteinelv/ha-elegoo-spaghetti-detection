@@ -8,7 +8,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # Dette genererer automatisk navnet: ghcr.io/ditt-brukernavn/ha-elegoo-spaghetti-detection-ml
   IMAGE_NAME: ${{ github.repository_owner }}/ha-elegoo-spaghetti-detection-ml
 
 jobs:
@@ -16,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Gir GitHub Action lov til å pushe til ditt GHCR-register
+      packages: write
 
     steps:
       - name: Sjekk ut kildekode
@@ -30,7 +29,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }} # Innebygd token, krever ingen oppsett!
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generer Docker metadata (tags og labels)
         id: meta
@@ -41,15 +40,13 @@ jobs:
             type=raw,value=latest
             type=sha,format=short
 
-          # Bygg og push Docker-image til GHCR
       - name: Bygg og push Docker-image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./addon                              # <-- ENDRET: Forteller Docker at den skal stå i addon-mappen
+          file: ./addon/Dockerfile.standalone.base      # <-- ENDRET: Peker på riktig standalone Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Aktiverer lagring av lag for lynraske påfølgende bygg
           cache-from: type=gha
           cache-to: type=gha,mode=max
